@@ -26,6 +26,8 @@ export type CollectionOptions<T> = {
 
 export type Collection<T> = {
 	load: (self: Collection<T>, key: string, defaultUserIds: { number }?) -> PromiseTypes.TypedPromise<Document<T>>,
+	get: (self: Collection<T>, key: string) -> PromiseTypes.TypedPromise<T>,
+	set: (self: Collection<T>, key: string, data: T) -> PromiseTypes.TypedPromise<()>,
 }
 
 export type Document<T> = {

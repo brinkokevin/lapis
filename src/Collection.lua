@@ -122,4 +122,47 @@ function Collection:load(key, defaultUserIds)
 		end)
 end
 
+function Collection:get(key)
+	return Promise.try(function()
+		local value = self.dataStore:GetAsync(key)
+		if not value then
+			return self.options.defaultData
+		end
+
+		if value.migrationVersion > #self.options.migrations then
+			error("Saved migration version ahead of latest version")
+		end
+
+		local migrated = Migration.migrate(self.options.migrations, value.migrationVersion, value.data)
+
+		local ok, message = self.options.validate(migrated)
+		if not ok then
+			error(`Invalid data: {message}`)
+		end
+
+		return migrated
+	end)
+end
+
+function Collection:set(key, value)
+	return Promise.try(function()
+		self.dataStore:UpdateAsync(key, function(previousValue: any?, keyInfo: DataStoreKeyInfo)
+			if previousValue then
+				local timeSinceUpdated = (DateTime.now().UnixTimestampMillis - keyInfo.UpdatedTime) / 1000
+				local lockId = previousValue.lockId
+				if lockId ~= nil and timeSinceUpdated < LOCK_EXPIRE then
+					error(`{self.dataStore.Name}-{key}: Could not update data because it is locked by another session`)
+				end
+			end
+
+			return {
+				migrationVersion = #self.options.migrations,
+				data = value,
+			},
+				keyInfo:GetUserIds(),
+				keyInfo:GetMetadata()
+		end)
+	end)
+end
+
 return Collection

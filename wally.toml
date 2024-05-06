@@ -1,6 +1,7 @@
 [package]
-name = "nezuo/lapis"
-version = "0.3.0"
+name = "brinkokevin/lapis"
+description = "Modified version of Lapis, has collection:get(key) and collection:set(key, value)"
+version = "0.0.1"
 registry = "https://github.com/UpliftGames/wally-index"
 exclude = ["**"]
 include = ["src", "src/*", "default.project.json", "wally.toml", "LICENSE"]
